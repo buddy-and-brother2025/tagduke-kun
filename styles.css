@@ -342,21 +342,22 @@ body {
     padding-right: 0;
   }
 
-  /* 右側（プレビュー）パネルを下部に固定する */
+  /* 下部のプレビューパネル（固定） */
   .panel-right {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    height: 32vh;              /* だいたい画面下30%くらい */
-    max-height: 320px;         /* 縦長端末用の上限 */
+    height: 30vh;           /* 少し低めにしてボタンも見えるように */
+    max-height: 280px;
     margin: 0;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
     z-index: 30;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* プレビュー内のレイアウトを縦方向にうまく使う */
   .panel-right .panel-description {
     margin-bottom: 4px;
     font-size: 11px;
@@ -367,21 +368,26 @@ body {
     font-size: 10px;
   }
 
+  /* プレビュー枠は「4行ぶん」くらいの高さで、内部スクロール */
   .panel-right .preview-box {
-    height: calc(32vh - 90px); /* 上の説明・ボタン分を引いた高さ調整 */
-    min-height: 100px;
+    flex: 0 0 auto;
+    height: 6.5rem;        /* だいたい4行くらい */
+    max-height: 7rem;
+    min-height: 4.5rem;
+    overflow-y: auto;      /* ここをスクロールできるように */
   }
 
   .panel-right .preview-textarea {
     height: 100%;
-    resize: none; /* モバイルでの引き伸ばしを防ぐ */
+    resize: none;          /* モバイルでのリサイズ禁止 */
   }
 
   .panel-right .preview-actions {
-    margin-top: 4px;
+    margin-top: 6px;
+    flex-shrink: 0;        /* ボタンがつぶれないように固定 */
   }
 
   .panel-right .helper-text {
-    display: none; /* スペース節約。必要なら消さなくてもOK */
+    display: none;         /* スペース節約のため非表示 */
   }
 }
