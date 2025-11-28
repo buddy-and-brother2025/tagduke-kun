@@ -488,6 +488,21 @@ function bindEvents() {
 
     const categoryId = target.dataset.categoryId;
 
+    // スマホ版：pill全体タップでタグ追加
+    if (event.target.closest(".tag-pill") && window.matchMedia("(max-width: 800px)").matches) {
+      const pill = event.target.closest(".tag-pill");
+      const tag = pill.querySelector(".tag-text").textContent;
+
+      // タグ追加
+      addTagToPreview(tag);
+
+      // 見た目の切り替え（選択状態）
+      pill.classList.toggle("selected");
+
+      return;
+    }
+
+
     switch (action) {
       case "addAll": {
         const cat = categories.find((c) => c.id === categoryId);

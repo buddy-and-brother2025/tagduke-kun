@@ -402,4 +402,29 @@ body {
   .panel-right .helper-text {
     display: none;      /* スペース節約 */
   }
+
+   /* スマホはタグ全体をタップ可能にする */
+  .tag-pill {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 16px;
+    border: 1px solid #d0eaea;
+    background-color: #f7ffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* 選択されたタグ（カテゴリ追加と同じ色味に） */
+  .tag-pill.selected {
+    background-color: #0ABAB5;
+    border-color: #0ABAB5;
+    color: #fff;
+  }
+
+  /* + ボタンはスマホ時は非表示 */
+  .tag-add-btn {
+    display: none !important;
+  }
+
 }
