@@ -457,11 +457,17 @@ function bindEvents() {
   });
 
   clearBtn.addEventListener("click", () => {
-    if (textarea) {
-      textarea.value = "";
-      savePreview();
-    }
+  if (textarea) {
+    textarea.value = "";
+    savePreview();
+  }
+
+  // すべての選択状態を解除（色を元に戻す）
+  document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
+    pill.classList.remove("selected");
   });
+});
+
 
   delimiterRadios.forEach((radio) => {
     radio.addEventListener("change", (e) => {
