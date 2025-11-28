@@ -456,26 +456,17 @@ function bindEvents() {
     copyToClipboard();
   });
 
-  clearBtn.addEventListener("click", () => {
+ clearBtn.addEventListener("click", () => {
   if (textarea) {
     textarea.value = "";
     savePreview();
   }
 
-  // すべての選択状態を解除（色を元に戻す）
+  // 選択中のタグ枠（selected）の色も全部リセット
   document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
     pill.classList.remove("selected");
   });
 });
-
-
-  delimiterRadios.forEach((radio) => {
-    radio.addEventListener("change", (e) => {
-      currentDelimiter = e.target.value;
-      const tags = getCurrentTagsFromPreview();
-      setPreviewTags(tags);
-    });
-  });
 
   // init delimiter radio state
   const selectedRadio = document.querySelector(
@@ -494,61 +485,68 @@ function bindEvents() {
 
   // カテゴリまわりのクリック（デリゲーション）
   categoryList.addEventListener("click", (event) => {
-    const target = event.target;
+  const target = event.target;
 
-    // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
-    const pill = target.closest(".tag-pill");
-    if (pill && window.matchMedia("(max-width: 800px)").matches) {
-      const tagText = pill.querySelector(".tag-text");
-      if (tagText) {
-        const tag = tagText.textContent.trim();
+  // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
+  const pill = target.closest(".tag-pill");
+  if (pill && window.matchMedia("(max-width: 800px)").matches) {
+    const tagText = pill.querySelector(".tag-text");
+    if (tagText) {
+      const tag = tagText.textContent.trim();
 
-        if (pill.classList.contains("selected")) {
-          // すでに選択されていたら → 解除してテキストエリアからも削除
-          pill.classList.remove("selected");
-          removeTagFromPreview(tag);
-        } else {
-          // 未選択なら → 選択状態にして追加
-          pill.classList.add("selected");
-          addTagToPreview(tag);
-        }
+      if (pill.classList.contains("selected")) {
+        // すでに選択されていたら → 解除してテキストエリアからも削除
+        pill.classList.remove("selected");
+        removeTagFromPreview(tag);
+      } else {
+        // 未選択なら → 選択状態にして追加
+        pill.classList.add("selected");
+        addTagToPreview(tag);
       }
-      return; // ここで終了（下の switch には行かない）
     }
+    return; // ここで終了（下のボタン処理には進まない）
+  }
 
+  // ▼ ここから下は PC/スマホ共通の「ボタン」処理 ▼
+  // クリックされた要素から、一番近い button[data-action] を探す
+  const button = target.closest("button[data-action]");
+  if (!button) return;
 
+  const action = button.dataset.action;
+  const categoryId = button.dataset.categoryId;
 
-    switch (action) {
-      case "addAll": {
-        const cat = categories.find((c) => c.id === categoryId);
-        if (cat) addTagsToPreview(cat.tags);
-        break;
-      }
-      case "addTag": {
-        const tag = target.dataset.tag;
-        if (tag) addTagToPreview(tag);
-        break;
-      }
-      case "edit": {
-        enterEditMode(categoryId);
-        break;
-      }
-      case "cancelEdit": {
-        cancelEditMode(categoryId);
-        break;
-      }
-      case "saveEdit": {
-        saveEdit(categoryId);
-        break;
-      }
-      case "deleteCategory": {
-        deleteCategory(categoryId);
-        break;
-      }
-      default:
-        break;
+  switch (action) {
+    case "addAll": {
+      const cat = categories.find((c) => c.id === categoryId);
+      if (cat) addTagsToPreview(cat.tags);
+      break;
     }
-  });
+    case "addTag": {
+      const tag = button.dataset.tag;
+      if (tag) addTagToPreview(tag);
+      break;
+    }
+    case "edit": {
+      enterEditMode(categoryId);
+      break;
+    }
+    case "cancelEdit": {
+      cancelEditMode(categoryId);
+      break;
+    }
+    case "saveEdit": {
+      saveEdit(categoryId);
+      break;
+    }
+    case "deleteCategory": {
+      deleteCategory(categoryId);
+      break;
+    }
+    default:
+      break;
+  }
+});
+
 }
 
 // ===== Init =====
