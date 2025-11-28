@@ -483,23 +483,17 @@ function bindEvents() {
   // カテゴリまわりのクリック（デリゲーション）
   categoryList.addEventListener("click", (event) => {
     const target = event.target;
-    const action = target.dataset.action;
-    if (!action) return;
 
-    const categoryId = target.dataset.categoryId;
-
-    // スマホ版：pill全体タップでタグ追加
-    if (event.target.closest(".tag-pill") && window.matchMedia("(max-width: 800px)").matches) {
-      const pill = event.target.closest(".tag-pill");
-      const tag = pill.querySelector(".tag-text").textContent;
-
-      // タグ追加
-      addTagToPreview(tag);
-
-      // 見た目の切り替え（選択状態）
-      pill.classList.toggle("selected");
-
-      return;
+    // ▼ スマホ版：タグ枠全体タップでタグ追加＋色変更 ▼
+    const pill = target.closest(".tag-pill");
+    if (pill && window.matchMedia("(max-width: 800px)").matches) {
+      const tagText = pill.querySelector(".tag-text");
+      if (tagText) {
+        addTagToPreview(tagText.textContent.trim());
+        // 選択されたことが分かるように色だけ ON（解除はしない）
+        pill.classList.add("selected");
+      }
+      return; // ここで終了（下の switch には行かない）
     }
 
 
