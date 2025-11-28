@@ -328,9 +328,18 @@ body {
     padding-bottom: 32vh; /* 下の固定プレビューぶん余白を確保 */
   }
 
-  /* 左側（カテゴリ側）パネルは普通にスクロールされる部分 */
-  .panel-left {
-    margin-bottom: 12px;
+ .panel-left {
+    position: relative;
+    height: auto;
+    overflow-y: auto;
+    padding-bottom: 12px;
+  }
+
+  /* category-list の高さ固定＆スクロールを解除（←これが原因） */
+  .category-list {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
   }
 
   /* 右側（プレビュー）パネルを下部に固定する */
