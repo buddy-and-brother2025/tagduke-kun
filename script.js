@@ -439,8 +439,7 @@ async function copyToClipboard() {
 }
 
 // ===== Event Binding =====
-
-function bindEvents() {
+   function bindEvents() {
   const categoryList = document.getElementById("categoryList");
   const addCategoryBtn = document.getElementById("addCategoryBtn");
   const copyBtn = document.getElementById("copyBtn");
@@ -448,27 +447,30 @@ function bindEvents() {
   const delimiterRadios = document.querySelectorAll('input[name="delimiter"]');
   const textarea = getPreviewTextarea();
 
+  // カテゴリ追加ボタン
   addCategoryBtn.addEventListener("click", () => {
     createCategory();
   });
 
+  // コピー
   copyBtn.addEventListener("click", () => {
     copyToClipboard();
   });
 
+  // クリア：テキストエリアを空にし、選択状態も解除
   clearBtn.addEventListener("click", () => {
-  if (textarea) {
-    textarea.value = "";
-    savePreview();
-  }
+    if (textarea) {
+      textarea.value = "";
+      savePreview();
+    }
 
-  // すべての選択状態を解除（色を元に戻す）
-  document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
-    pill.classList.remove("selected");
+    // 選択中のタグ枠の色も全部リセット
+    document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
+      pill.classList.remove("selected");
+    });
   });
-});
 
-
+  // 区切り（スペース / 改行）の変更
   delimiterRadios.forEach((radio) => {
     radio.addEventListener("change", (e) => {
       currentDelimiter = e.target.value;
@@ -477,7 +479,7 @@ function bindEvents() {
     });
   });
 
-  // init delimiter radio state
+  // 区切りラジオの初期状態
   const selectedRadio = document.querySelector(
     `input[name="delimiter"][value="${currentDelimiter}"]`
   );
@@ -485,18 +487,18 @@ function bindEvents() {
     selectedRadio.checked = true;
   }
 
-  // プレビュー手動編集 → そのまま保存
+  // プレビュー手動編集 → 保存
   if (textarea) {
     textarea.addEventListener("input", () => {
       savePreview();
     });
   }
 
-  // カテゴリまわりのクリック（デリゲーション）
+  // ▼ カテゴリ周りのクリック（まとめて追加 / 編集 / 削除 / タグクリック） ▼
   categoryList.addEventListener("click", (event) => {
     const target = event.target;
 
-    // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
+    // 1. スマホ版：タグ枠全体タップで追加／解除
     const pill = target.closest(".tag-pill");
     if (pill && window.matchMedia("(max-width: 800px)").matches) {
       const tagText = pill.querySelector(".tag-text");
@@ -513,10 +515,15 @@ function bindEvents() {
           addTagToPreview(tag);
         }
       }
-      return; // ここで終了（下の switch には行かない）
+      return; // スマホのタグタップはここで完結
     }
 
+    // 2. それ以外（「まとめて追加」「編集」「削除」「＋」ボタン）は data-action を見る
+    const button = target.closest("button[data-action]");
+    if (!button) return;
 
+    const action = button.dataset.action;
+    const categoryId = button.dataset.categoryId;
 
     switch (action) {
       case "addAll": {
@@ -525,7 +532,7 @@ function bindEvents() {
         break;
       }
       case "addTag": {
-        const tag = target.dataset.tag;
+        const tag = button.dataset.tag;
         if (tag) addTagToPreview(tag);
         break;
       }
@@ -550,6 +557,7 @@ function bindEvents() {
     }
   });
 }
+
 
 // ===== Init =====
 
