@@ -320,35 +320,38 @@ body {
   color: var(--text-sub);
 }
 
+.preview-top {
+  display: block;
+}
+
 /* ===== Responsive ===== */
 
 @media (max-width: 800px) {
   .app-main {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 32vh; /* 下の固定プレビューぶん余白を確保 */
+    padding-bottom: 30vh; /* 下の固定プレビューぶん余白 */
   }
 
- .panel-left {
+  .panel-left {
     position: relative;
     height: auto;
     overflow-y: auto;
     padding-bottom: 12px;
   }
 
-  /* category-list の高さ固定＆スクロールを解除（←これが原因） */
   .category-list {
     max-height: none;
     overflow-y: visible;
     padding-right: 0;
   }
 
-  /* 下部のプレビューパネル（固定） */
+  /* 下部プレビューパネル（固定） */
   .panel-right {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    height: 30vh;           /* 少し低めにしてボタンも見えるように */
+    height: 30vh;
     max-height: 280px;
     margin: 0;
     border-radius: 16px 16px 0 0;
@@ -363,31 +366,40 @@ body {
     font-size: 11px;
   }
 
-  .panel-right .preview-options {
+  /* スマホ時は「区切りラジオ」と「コピー/クリア」を横並びに */
+  .preview-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
     margin-bottom: 4px;
+  }
+
+  .preview-options {
     font-size: 10px;
   }
 
-  /* プレビュー枠は「4行ぶん」くらいの高さで、内部スクロール */
+  .panel-right .preview-actions {
+    margin-top: 0;      /* 上にくっつける */
+    flex-shrink: 0;
+  }
+
+  /* プレビュー枠は4行くらい＋中スクロール */
   .panel-right .preview-box {
-    flex: 0 0 auto;
-    height: 6.5rem;        /* だいたい4行くらい */
-    max-height: 7rem;
+    flex: 1 1 auto;
+    height: auto;
+    max-height: 7rem;   /* だいたい4行くらい */
     min-height: 4.5rem;
-    overflow-y: auto;      /* ここをスクロールできるように */
+    overflow-y: auto;
   }
 
   .panel-right .preview-textarea {
     height: 100%;
-    resize: none;          /* モバイルでのリサイズ禁止 */
-  }
-
-  .panel-right .preview-actions {
-    margin-top: 6px;
-    flex-shrink: 0;        /* ボタンがつぶれないように固定 */
+    resize: none;
   }
 
   .panel-right .helper-text {
-    display: none;         /* スペース節約のため非表示 */
+    display: none;      /* スペース節約 */
   }
 }

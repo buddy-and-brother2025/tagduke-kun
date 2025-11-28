@@ -47,35 +47,36 @@
         選んだタグの組み合わせがここに表示されます。Instagram に貼り付けて使ってください。
       </p>
 
-      <div class="preview-options">
-        <label class="radio-label">
-          <input type="radio" name="delimiter" value="space" checked />
-          スペースで区切る
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="delimiter" value="newline" />
-          改行で区切る
-        </label>
+      <div class="preview-top">
+        <div class="preview-options">
+          <label class="radio-label">
+            <input type="radio" name="delimiter" value="space" checked />
+            スペースで区切る
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="delimiter" value="newline" />
+            改行で区切る
+          </label>
+        </div>
+
+        <div class="preview-actions">
+          <button id="copyBtn" class="button button-primary">
+            コピー
+          </button>
+          <button id="clearBtn" class="button button-secondary">
+            クリア
+          </button>
+        </div>
       </div>
 
       <div class="preview-box">
-        <textarea id="previewArea" 
-        class="preview-textarea" 
-        rows="10"></textarea>
-      </div>
-
-      <div class="preview-actions">
-        <button id="copyBtn" class="button button-primary">
-          コピー
-        </button>
-        <button id="clearBtn" class="button button-secondary">
-          クリア
-        </button>
+        <textarea id="previewArea" class="preview-textarea" rows="10"></textarea>
       </div>
 
       <p class="helper-text">
         ※同じタグは重複しないように自動で整理されます。
       </p>
+
     </section>
   </main>
 
