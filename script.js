@@ -484,7 +484,7 @@ function bindEvents() {
   }
 
   // カテゴリまわりのクリック（デリゲーション）
-  categoryList.addEventListener("click", (event) => {
+ categoryList.addEventListener("click", (event) => {
   const target = event.target;
 
   // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
