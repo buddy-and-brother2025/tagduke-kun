@@ -320,19 +320,18 @@ body {
   color: var(--text-sub);
 }
 
-.preview-top {
-  display: block;
-  margin-bottom: 0;
-}
+
 
 /* ===== Responsive ===== */
 
 @media (max-width: 800px) {
+  /* メインレイアウトを1カラムにして、下の固定プレビューぶん余白を確保 */
   .app-main {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 30vh; /* 下の固定プレビューぶん余白 */
+    padding-bottom: 30vh;
   }
 
+  /* 左側（カテゴリ〜タグ部分）は1つの大きいスクロール領域にする */
   .panel-left {
     position: relative;
     height: auto;
@@ -346,7 +345,8 @@ body {
     padding-right: 0;
   }
 
-  /* 下部プレビューパネル（固定） */
+  /* ▼ 下部プレビューを固定＆グリッドレイアウトにして
+        「区切り設定＋ボタン」を上、「textarea」をその下に配置 ▼ */
   .panel-right {
     position: fixed;
     left: 0;
@@ -358,39 +358,50 @@ body {
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
     z-index: 30;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      "title title"
+      "desc desc"
+      "options actions"
+      "box box";
+    padding: 10px 14px;
+    background-color: #ffffff;
+  }
+
+  .panel-right .panel-title {
+    grid-area: title;
+    margin-bottom: 2px;
+    font-size: 14px;
   }
 
   .panel-right .panel-description {
+    grid-area: desc;
     margin-bottom: 4px;
     font-size: 11px;
   }
 
-  /* スマホ時は「区切りラジオ」と「コピー/クリア」を横並びに */
-  .preview-top {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
-  }
-
   .preview-options {
+    grid-area: options;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     font-size: 10px;
   }
 
-  .panel-right .preview-actions {
-    margin-top: 0;      /* 上にくっつける */
-    flex-shrink: 0;
+  .preview-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
   }
 
-  /* プレビュー枠は4行くらい＋中スクロール */
+  /* プレビュー枠は4行ぶん＋中スクロール */
   .panel-right .preview-box {
-    flex: 1 1 auto;
-    height: auto;
-    max-height: 7rem;   /* だいたい4行くらい */
+    grid-area: box;
+    max-height: 7rem;     /* だいたい4行くらい */
     min-height: 4.5rem;
     overflow-y: auto;
   }
@@ -401,10 +412,10 @@ body {
   }
 
   .panel-right .helper-text {
-    display: none;      /* スペース節約 */
+    display: none;         /* スペース節約のため非表示 */
   }
 
-   /* スマホはタグ全体をタップ可能にする */
+  /* ▼ スマホだけ：タグ pill 全体をボタンにする仕様 ▼ */
   .tag-pill {
     cursor: pointer;
     padding: 6px 12px;
@@ -416,16 +427,13 @@ body {
     gap: 6px;
   }
 
-  /* 選択されたタグ（カテゴリ追加と同じ色味に） */
   .tag-pill.selected {
-    background-color: #0ABAB5;
+    background-color: #0ABAB5;  /* 「カテゴリ追加」と同じ感じの色 */
     border-color: #0ABAB5;
-    color: #fff;
+    color: #ffffff;
   }
 
-  /* + ボタンはスマホ時は非表示 */
   .tag-add-btn {
-    display: none !important;
+    display: none !important;   /* スマホでは「＋」ボタン非表示 */
   }
-
 }

@@ -41,43 +41,54 @@
       </div>
     </section>
 
-    <section class="panel panel-right">
-      <h2 class="panel-title">タグプレビュー &amp; コピー</h2>
-      <p class="panel-description">
-        選んだタグの組み合わせがここに表示されます。Instagram に貼り付けて使ってください。
-      </p>
+<section class="panel panel-right">
+  <h2 class="panel-title">タグプレビュー &amp; コピー</h2>
+  <p class="panel-description">
+    選んだタグの組み合わせがここに表示されます。Instagram に貼り付けて使ってください。
+  </p>
 
-      <div class="preview-top">
-        <div class="preview-options">
-          <label class="radio-label">
-            <input type="radio" name="delimiter" value="space" checked />
-            スペースで区切る
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="delimiter" value="newline" />
-            改行で区切る
-          </label>
-        </div>
+  <!-- ① 区切り設定 -->
+  <div class="preview-options">
+    <label class="radio-label">
+      <input
+        type="radio"
+        name="delimiter"
+        value="space"
+        checked
+      />
+      スペースで区切る
+    </label>
+    <label class="radio-label">
+      <input type="radio" name="delimiter" value="newline" />
+      改行で区切る
+    </label>
+  </div>
 
-        <div class="preview-actions">
-          <button id="copyBtn" class="button button-primary">
-            コピー
-          </button>
-          <button id="clearBtn" class="button button-secondary">
-            クリア
-          </button>
-        </div>
-      </div>
+  <!-- ② プレビュー枠（textarea） -->
+  <div class="preview-box">
+    <textarea
+      id="previewArea"
+      class="preview-textarea"
+      rows="10"
+    ></textarea>
+  </div>
 
-      <div class="preview-box">
-        <textarea id="previewArea" class="preview-textarea" rows="10"></textarea>
-      </div>
+  <!-- ③ コピー／クリア（PCではここが textarea の下） -->
+  <div class="preview-actions">
+    <button id="copyBtn" class="button button-primary">
+      コピー
+    </button>
+    <button id="clearBtn" class="button button-secondary">
+      クリア
+    </button>
+  </div>
 
-      <p class="helper-text">
-        ※同じタグは重複しないように自動で整理されます。
-      </p>
+  <p class="helper-text">
+    ※同じタグは重複しないように自動で整理されます。
+  </p>
+</section>
+<!-- ▲ ここまでがタグプレビュー部分 ▲ -->
 
-    </section>
   </main>
 
   <footer class="app-footer">
