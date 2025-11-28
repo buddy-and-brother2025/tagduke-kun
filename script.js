@@ -1,10 +1,8 @@
 // タグヅケくん script.js
 
-// ===== 定数 =====
 const STORAGE_KEY = "tagduke-data-v1";
 const STORAGE_PREVIEW_KEY = "tagduke-preview-v1";
 
-// デフォルトカテゴリ
 const defaultCategories = [
   {
     id: "basic",
@@ -89,110 +87,109 @@ const defaultCategories = [
   },
 ];
 
-// ===== 状態管理 =====
 let categories = [];
-let currentDelimiter = "space"; // "space" | "newline"
+let currentDelimiter = "space";
 let initialPreviewText = "";
 
-// ===== ローカルストレージ =====
+// ===== Utility =====
+
+function getPreviewTextarea() {
+  return document.getElementById("previewArea");
+}
+
 function loadData() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.categories)) {
-        categories = parsed.categories;
-      } else {
-        categories = [...defaultCategories];
-      }
-      currentDelimiter = parsed.delimiter || "space";
+      categories = JSON.parse(raw);
     } else {
-      categories = [...defaultCategories];
-      currentDelimiter = "space";
-    }
-
-    const previewRaw = localStorage.getItem(STORAGE_PREVIEW_KEY);
-    if (previewRaw) {
-      const preview = JSON.parse(previewRaw);
-      initialPreviewText = preview.text || "";
-      currentDelimiter = preview.delimiter || currentDelimiter;
+      categories = defaultCategories;
     }
   } catch (e) {
-    console.error("loadData error", e);
-    categories = [...defaultCategories];
-    currentDelimiter = "space";
+    console.error("Failed to load data:", e);
+    categories = defaultCategories;
+  }
+
+  try {
+    const previewRaw = window.localStorage.getItem(STORAGE_PREVIEW_KEY);
+    if (previewRaw) {
+      const parsed = JSON.parse(previewRaw);
+      initialPreviewText = parsed.text || "";
+      currentDelimiter = parsed.delimiter || "space";
+    }
+  } catch (e) {
+    console.error("Failed to load preview:", e);
   }
 }
 
 function saveData() {
-  const payload = {
-    categories,
-    delimiter: currentDelimiter,
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
 }
 
 function savePreview() {
   const textarea = getPreviewTextarea();
   if (!textarea) return;
-  const payload = {
-    text: textarea.value || "",
-    delimiter: currentDelimiter,
-  };
-  localStorage.setItem(STORAGE_PREVIEW_KEY, JSON.stringify(payload));
+  window.localStorage.setItem(
+    STORAGE_PREVIEW_KEY,
+    JSON.stringify({
+      text: textarea.value,
+      delimiter: currentDelimiter,
+    })
+  );
 }
 
-// ===== プレビュー関連 =====
-function getPreviewTextarea() {
-  return document.getElementById("previewArea");
-}
-
+// 現在のプレビュー欄からタグ配列を取得（空白・改行区切り）
 function getCurrentTagsFromPreview() {
   const textarea = getPreviewTextarea();
   if (!textarea) return [];
-  const text = textarea.value.trim();
-  if (!text) return [];
-
-  if (currentDelimiter === "newline") {
-    return text
-      .split("\n")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-  } else {
-    return text
-      .split(" ")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
+  const raw = textarea.value.trim();
+  if (!raw) return [];
+  const parts = raw.split(/\s+/).filter(Boolean);
+  const seen = new Set();
+  const result = [];
+  for (const p of parts) {
+    if (!seen.has(p)) {
+      seen.add(p);
+      result.push(p);
+    }
   }
+  return result;
 }
 
+// タグ配列を現在の区切り設定でプレビュー欄に反映
 function setPreviewTags(tags) {
   const textarea = getPreviewTextarea();
   if (!textarea) return;
-
-  const unique = Array.from(new Set(tags));
-  let text = "";
-  if (currentDelimiter === "newline") {
-    text = unique.join("\n");
-  } else {
-    text = unique.join(" ");
-  }
-
-  textarea.value = text;
+  const delimiter = currentDelimiter === "newline" ? "\n" : " ";
+  textarea.value = tags.join(delimiter);
   savePreview();
 }
 
+// タグ1つ追加（重複はスキップ）
 function addTagToPreview(tag) {
   const tags = getCurrentTagsFromPreview();
-  tags.push(tag);
-  setPreviewTags(tags);
+  if (!tags.includes(tag)) {
+    tags.push(tag);
+    setPreviewTags(tags);
+  }
 }
 
-function addTagsToPreview(newTags) {
+// タグ配列まとめて追加（重複除去）
+function addTagsToPreview(tagsToAdd) {
   const tags = getCurrentTagsFromPreview();
-  setPreviewTags([...tags, ...newTags]);
+  const seen = new Set(tags);
+  let updated = false;
+  for (const t of tagsToAdd) {
+    if (!seen.has(t)) {
+      seen.add(t);
+      tags.push(t);
+      updated = true;
+    }
+  }
+  if (updated) {
+    setPreviewTags(tags);
+  }
 }
-
 // タグ1つ削除
 function removeTagFromPreview(tag) {
   const tags = getCurrentTagsFromPreview();
@@ -200,114 +197,195 @@ function removeTagFromPreview(tag) {
   setPreviewTags(filtered);
 }
 
-// クリップボードコピー
-function copyToClipboard() {
-  const textarea = getPreviewTextarea();
-  if (!textarea) return;
+// ===== Category Rendering =====
 
-  textarea.select();
-  textarea.setSelectionRange(0, 99999);
-
-  try {
-    document.execCommand("copy");
-  } catch (e) {
-    console.error("copy failed", e);
-  }
-}
-
-// ===== カテゴリ描画 =====
 function renderCategories() {
   const container = document.getElementById("categoryList");
-  if (!container) return;
-
   container.innerHTML = "";
 
+  if (!categories.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "カテゴリがまだありません。「カテゴリ追加」から作成してください。";
+    empty.className = "helper-text";
+    container.appendChild(empty);
+    return;
+  }
+
   categories.forEach((cat) => {
-    const section = document.createElement("section");
-    section.className = "category-card";
-    section.dataset.categoryId = cat.id;
+    const card = document.createElement("div");
+    card.className = "category-card";
+    card.dataset.categoryId = cat.id;
 
     const header = document.createElement("div");
     header.className = "category-header";
 
-    const title = document.createElement("h3");
+    const title = document.createElement("div");
     title.className = "category-title";
     title.textContent = cat.name;
 
-    const headerActions = document.createElement("div");
-    headerActions.className = "category-actions";
+    const actions = document.createElement("div");
+    actions.className = "category-actions";
 
     const addAllBtn = document.createElement("button");
-    addAllBtn.className = "chip-button chip-button-primary";
+    addAllBtn.className = "button button-secondary button-small";
     addAllBtn.textContent = "＋ まとめて追加";
     addAllBtn.dataset.action = "addAll";
     addAllBtn.dataset.categoryId = cat.id;
 
     const editBtn = document.createElement("button");
-    editBtn.className = "chip-button chip-button-ghost";
+    editBtn.className = "button button-secondary button-small";
     editBtn.textContent = "編集";
     editBtn.dataset.action = "edit";
     editBtn.dataset.categoryId = cat.id;
 
     const deleteBtn = document.createElement("button");
-    deleteBtn.className = "chip-button chip-button-danger";
+    deleteBtn.className = "button button-danger button-small";
     deleteBtn.textContent = "削除";
     deleteBtn.dataset.action = "deleteCategory";
     deleteBtn.dataset.categoryId = cat.id;
 
-    headerActions.appendChild(addAllBtn);
-    headerActions.appendChild(editBtn);
-    headerActions.appendChild(deleteBtn);
+    actions.appendChild(addAllBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
 
     header.appendChild(title);
-    header.appendChild(headerActions);
+    header.appendChild(actions);
 
-    const body = document.createElement("div");
-    body.className = "category-body";
+    const tagsWrap = document.createElement("div");
+    tagsWrap.className = "category-tags";
+    tagsWrap.dataset.categoryId = cat.id;
 
-    const tagList = document.createElement("div");
-    tagList.className = "tag-list";
+    if (!cat.tags.length) {
+      const small = document.createElement("span");
+      small.className = "helper-text";
+      small.textContent = "タグが未登録です。編集から追加してください。";
+      tagsWrap.appendChild(small);
+    } else {
+      cat.tags.forEach((tag) => {
+        const pill = document.createElement("div");
+        pill.className = "tag-pill";
 
-    cat.tags.forEach((tag) => {
-      const pill = document.createElement("div");
-      pill.className = "tag-pill";
+        const span = document.createElement("span");
+        span.className = "tag-text";
+        span.textContent = tag;
 
-      const textSpan = document.createElement("span");
-      textSpan.className = "tag-text";
-      textSpan.textContent = tag;
+        const btn = document.createElement("button");
+        btn.className = "tag-add-btn";
+        btn.textContent = "＋";
+        btn.title = "このタグを追加";
+        btn.dataset.action = "addTag";
+        btn.dataset.categoryId = cat.id;
+        btn.dataset.tag = tag;
 
-      const addBtn = document.createElement("button");
-      addBtn.className = "tag-add-btn";
-      addBtn.type = "button";
-      addBtn.textContent = "＋";
-      addBtn.dataset.action = "addTag";
-      addBtn.dataset.tag = tag;
-      addBtn.dataset.categoryId = cat.id;
+        pill.appendChild(span);
+        pill.appendChild(btn);
+        tagsWrap.appendChild(pill);
+      });
+    }
 
-      pill.appendChild(textSpan);
-      pill.appendChild(addBtn);
-      tagList.appendChild(pill);
-    });
-
-    body.appendChild(tagList);
-
-    section.appendChild(header);
-    section.appendChild(body);
-
-    container.appendChild(section);
+    card.appendChild(header);
+    card.appendChild(tagsWrap);
+    container.appendChild(card);
   });
 }
 
-// ===== カテゴリ編集系 =====
+// ===== Editing =====
+
+function enterEditMode(categoryId) {
+  const card = document.querySelector(
+    `.category-card[data-category-id="${categoryId}"]`
+  );
+  if (!card) return;
+
+  const cat = categories.find((c) => c.id === categoryId);
+  if (!cat) return;
+
+  card.classList.add("editing");
+
+  const tagsWrap = card.querySelector(".category-tags");
+  tagsWrap.innerHTML = "";
+
+  const editArea = document.createElement("div");
+  editArea.className = "edit-area";
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "edit-textarea";
+  textarea.value = cat.tags.join("\n");
+  textarea.dataset.categoryId = categoryId;
+
+  const helper = document.createElement("div");
+  helper.className = "edit-helper";
+  helper.textContent = "1行につき1タグで入力してください。";
+
+  const actions = document.createElement("div");
+  actions.className = "edit-actions";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "button button-secondary button-small";
+  cancelBtn.textContent = "キャンセル";
+  cancelBtn.dataset.action = "cancelEdit";
+  cancelBtn.dataset.categoryId = categoryId;
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "button button-primary button-small";
+  saveBtn.textContent = "保存";
+  saveBtn.dataset.action = "saveEdit";
+  saveBtn.dataset.categoryId = categoryId;
+
+  actions.appendChild(cancelBtn);
+  actions.appendChild(saveBtn);
+
+  editArea.appendChild(textarea);
+  editArea.appendChild(helper);
+  editArea.appendChild(actions);
+
+  tagsWrap.appendChild(editArea);
+}
+
+function cancelEditMode(categoryId) {
+  const card = document.querySelector(
+    `.category-card[data-category-id="${categoryId}"]`
+  );
+  if (!card) return;
+  card.classList.remove("editing");
+  renderCategories();
+}
+
+function saveEdit(categoryId) {
+  const card = document.querySelector(
+    `.category-card[data-category-id="${categoryId}"]`
+  );
+  if (!card) return;
+
+  const textarea = card.querySelector(".edit-textarea");
+  if (!textarea) return;
+
+  const value = textarea.value || "";
+  const lines = value
+    .split("\n")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+
+  const cat = categories.find((c) => c.id === categoryId);
+  if (!cat) return;
+
+  cat.tags = lines;
+  saveData();
+  renderCategories();
+}
+
+// ===== Category Management =====
+
 function createCategory() {
-  const name = window.prompt("新しいカテゴリ名を入力してください。", "新規カテゴリ");
+  const name = window.prompt("新しいカテゴリ名を入力してください：", "新しいカテゴリ");
   if (!name) return;
 
-  const idBase = name.replace(/\s+/g, "").toLowerCase() || "category";
-  let id = idBase;
-  let i = 1;
+  const idBase = name.replace(/\s+/g, "_").toLowerCase();
+  let id = idBase || "cat";
+  let counter = 1;
   while (categories.some((c) => c.id === id)) {
-    id = `${idBase}-${i++}`;
+    id = `${idBase || "cat"}_${counter}`;
+    counter += 1;
   }
 
   categories.push({
@@ -320,39 +398,48 @@ function createCategory() {
   renderCategories();
 }
 
-function enterEditMode(categoryId) {
-  const cat = categories.find((c) => c.id === categoryId);
-  if (!cat) return;
-
-  const text = cat.tags.join("\n");
-  const edited = window.prompt(
-    "タグを1行ずつ入力してください（改行ごとに1タグ）。",
-    text
-  );
-  if (edited === null) return;
-
-  const tags = edited
-    .split("\n")
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
-
-  cat.tags = tags;
-  saveData();
-  renderCategories();
-}
-
 function deleteCategory(categoryId) {
   const cat = categories.find((c) => c.id === categoryId);
   if (!cat) return;
 
-  if (!window.confirm(`「${cat.name}」を削除してもよろしいですか？`)) return;
+  const ok = window.confirm(`カテゴリ「${cat.name}」を削除しますか？`);
+  if (!ok) return;
 
   categories = categories.filter((c) => c.id !== categoryId);
   saveData();
   renderCategories();
 }
 
-// ===== イベントバインド =====
+// ===== Clipboard =====
+
+async function copyToClipboard() {
+  const textarea = getPreviewTextarea();
+  if (!textarea) {
+    window.alert("コピーするタグがありません。");
+    return;
+  }
+  const text = textarea.value;
+  if (!text.trim()) {
+    window.alert("コピーするタグがありません。");
+    return;
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      textarea.select();
+      document.execCommand("copy");
+    }
+    window.alert("コピーしました！");
+  } catch (e) {
+    console.error(e);
+    window.alert("コピーに失敗しました。手動でコピーしてください。");
+  }
+}
+
+// ===== Event Binding =====
+
 function bindEvents() {
   const categoryList = document.getElementById("categoryList");
   const addCategoryBtn = document.getElementById("addCategoryBtn");
@@ -361,35 +448,27 @@ function bindEvents() {
   const delimiterRadios = document.querySelectorAll('input[name="delimiter"]');
   const textarea = getPreviewTextarea();
 
-  // カテゴリ追加ボタン
-  if (addCategoryBtn) {
-    addCategoryBtn.addEventListener("click", () => {
-      createCategory();
-    });
+  addCategoryBtn.addEventListener("click", () => {
+    createCategory();
+  });
+
+  copyBtn.addEventListener("click", () => {
+    copyToClipboard();
+  });
+
+  clearBtn.addEventListener("click", () => {
+  if (textarea) {
+    textarea.value = "";
+    savePreview();
   }
 
-  // コピー
-  if (copyBtn) {
-    copyBtn.addEventListener("click", () => {
-      copyToClipboard();
-    });
-  }
+  // すべての選択状態を解除（色を元に戻す）
+  document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
+    pill.classList.remove("selected");
+  });
+});
 
-  // クリア：テキストエリアを空にし、選択状態も解除
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      if (textarea) {
-        textarea.value = "";
-        savePreview();
-      }
 
-      document.querySelectorAll(".tag-pill.selected").forEach((pill) => {
-        pill.classList.remove("selected");
-      });
-    });
-  }
-
-  // 区切り（スペース / 改行）の変更
   delimiterRadios.forEach((radio) => {
     radio.addEventListener("change", (e) => {
       currentDelimiter = e.target.value;
@@ -398,7 +477,7 @@ function bindEvents() {
     });
   });
 
-  // 区切りラジオの初期状態
+  // init delimiter radio state
   const selectedRadio = document.querySelector(
     `input[name="delimiter"][value="${currentDelimiter}"]`
   );
@@ -406,75 +485,80 @@ function bindEvents() {
     selectedRadio.checked = true;
   }
 
-  // プレビュー手動編集 → 保存
+  // プレビュー手動編集 → そのまま保存
   if (textarea) {
     textarea.addEventListener("input", () => {
       savePreview();
     });
   }
 
-  // カテゴリリスト内のクリック（まとめて追加 / 編集 / 削除 / タグクリック）
-  if (categoryList) {
-    categoryList.addEventListener("click", (event) => {
-      const target = event.target;
+  // カテゴリまわりのクリック（デリゲーション）
+  categoryList.addEventListener("click", (event) => {
+    const target = event.target;
 
-      // 1. スマホ版：タグ枠全体タップで追加／解除
-      const pill = target.closest(".tag-pill");
-      if (pill && window.matchMedia("(max-width: 800px)").matches) {
-        const tagText = pill.querySelector(".tag-text");
-        if (tagText) {
-          const tag = tagText.textContent.trim();
+    // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
+    const pill = target.closest(".tag-pill");
+    if (pill && window.matchMedia("(max-width: 800px)").matches) {
+      const tagText = pill.querySelector(".tag-text");
+      if (tagText) {
+        const tag = tagText.textContent.trim();
 
-          if (pill.classList.contains("selected")) {
-            pill.classList.remove("selected");
-            removeTagFromPreview(tag);
-          } else {
-            pill.classList.add("selected");
-            addTagToPreview(tag);
-          }
+        if (pill.classList.contains("selected")) {
+          // すでに選択されていたら → 解除してテキストエリアからも削除
+          pill.classList.remove("selected");
+          removeTagFromPreview(tag);
+        } else {
+          // 未選択なら → 選択状態にして追加
+          pill.classList.add("selected");
+          addTagToPreview(tag);
         }
-        return; // スマホのタグタップはここで完結
       }
+      return; // ここで終了（下の switch には行かない）
+    }
 
-      // 2. それ以外（ボタン系）は data-action を見る
-      const button = target.closest("button[data-action]");
-      if (!button) return;
 
-      const action = button.dataset.action;
-      const categoryId = button.dataset.categoryId;
 
-      switch (action) {
-        case "addAll": {
-          const cat = categories.find((c) => c.id === categoryId);
-          if (cat) addTagsToPreview(cat.tags);
-          break;
-        }
-        case "addTag": {
-          const tag = button.dataset.tag;
-          if (tag) addTagToPreview(tag);
-          break;
-        }
-        case "edit": {
-          enterEditMode(categoryId);
-          break;
-        }
-        case "deleteCategory": {
-          deleteCategory(categoryId);
-          break;
-        }
-        default:
-          break;
+    switch (action) {
+      case "addAll": {
+        const cat = categories.find((c) => c.id === categoryId);
+        if (cat) addTagsToPreview(cat.tags);
+        break;
       }
-    });
-  }
+      case "addTag": {
+        const tag = target.dataset.tag;
+        if (tag) addTagToPreview(tag);
+        break;
+      }
+      case "edit": {
+        enterEditMode(categoryId);
+        break;
+      }
+      case "cancelEdit": {
+        cancelEditMode(categoryId);
+        break;
+      }
+      case "saveEdit": {
+        saveEdit(categoryId);
+        break;
+      }
+      case "deleteCategory": {
+        deleteCategory(categoryId);
+        break;
+      }
+      default:
+        break;
+    }
+  });
 }
 
 // ===== Init =====
+
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
   renderCategories();
   bindEvents();
 
+  // 保存していたプレビュー内容を反映
   const textarea = getPreviewTextarea();
   if (textarea) {
     textarea.value = initialPreviewText;
