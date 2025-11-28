@@ -190,6 +190,12 @@ function addTagsToPreview(tagsToAdd) {
     setPreviewTags(tags);
   }
 }
+// タグ1つ削除
+function removeTagFromPreview(tag) {
+  const tags = getCurrentTagsFromPreview();
+  const filtered = tags.filter((t) => t !== tag);
+  setPreviewTags(filtered);
+}
 
 // ===== Category Rendering =====
 
@@ -484,17 +490,26 @@ function bindEvents() {
   categoryList.addEventListener("click", (event) => {
     const target = event.target;
 
-    // ▼ スマホ版：タグ枠全体タップでタグ追加＋色変更 ▼
+    // ▼ スマホ版：タグ枠全体タップで追加／解除 ▼
     const pill = target.closest(".tag-pill");
     if (pill && window.matchMedia("(max-width: 800px)").matches) {
       const tagText = pill.querySelector(".tag-text");
       if (tagText) {
-        addTagToPreview(tagText.textContent.trim());
-        // 選択されたことが分かるように色だけ ON（解除はしない）
-        pill.classList.add("selected");
+        const tag = tagText.textContent.trim();
+
+        if (pill.classList.contains("selected")) {
+          // すでに選択されていたら → 解除してテキストエリアからも削除
+          pill.classList.remove("selected");
+          removeTagFromPreview(tag);
+        } else {
+          // 未選択なら → 選択状態にして追加
+          pill.classList.add("selected");
+          addTagToPreview(tag);
+        }
       }
       return; // ここで終了（下の switch には行かない）
     }
+
 
 
     switch (action) {
