@@ -1,95 +1,87 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <title>タグヅケくん | ジャムデザイン タグ管理ツール</title>
-    <meta
-      name="description"
-      content="Instagram用のハッシュタグをカテゴリごとに管理して、一発でコピーできるタグ管理ツールです。"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="app-header">
-      <div class="app-header-inner">
-        <div>
-          <h1 class="app-title">タグヅケくん</h1>
-          <p class="app-subtitle">ジャムデザイン タグ管理ツール</p>
-        </div>
-        <div class="app-meta">
-          <span class="badge">Made by Jamdesign / Buddy &amp; Brother</span>
-        </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>タグヅケくん | ジャムデザイン タグ管理ツール</title>
+  <meta name="description" content="Instagram用のハッシュタグをカテゴリごとに管理して、一発でコピーできるタグ管理ツールです。" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div>
+        <h1 class="app-title">タグヅケくん</h1>
+        <p class="app-subtitle">ジャムデザイン タグ管理ツール</p>
       </div>
-    </header>
+      <div class="app-meta">
+        <span class="badge">Made by Jamdesign / Buddy &amp; Brother</span>
+      </div>
+    </div>
+  </header>
 
-    <main class="app-main">
-      <section class="panel panel-left">
-        <div class="panel-header">
-          <h2 class="panel-title">カテゴリとタグストック</h2>
-          <button id="addCategoryBtn" class="button button-primary">
-            ＋ カテゴリ追加
-          </button>
-        </div>
-        <p class="panel-description">
-          投稿のジャンルごとにタグをストックしておいて、必要なものをどんどん追加していけます。
-        </p>
+  <main class="app-main">
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <h2 class="panel-title">カテゴリとタグストック</h2>
+        <button id="addCategoryBtn" class="button button-primary">
+          ＋ カテゴリ追加
+        </button>
+      </div>
+      <p class="panel-description">
+        投稿のジャンルごとにタグをストックしておいて、必要なものをどんどん追加していけます。
+      </p>
 
-        <div id="categoryList" class="category-list">
-          <!-- JSでカテゴリカードを描画 -->
-        </div>
-      </section>
+      <div id="categoryList" class="category-list">
+        <!-- JSでカテゴリカードを描画 -->
+      </div>
+    </section>
 
-      <section class="panel panel-right">
-        <h2 class="panel-title">タグプレビュー &amp; コピー</h2>
-        <p class="panel-description">
-          選んだタグの組み合わせがここに表示されます。Instagram に貼り付けて使ってください。
-        </p>
+    <section class="panel panel-right">
+      <h2 class="panel-title">タグプレビュー &amp; コピー</h2>
+      <p class="panel-description">
+        選んだタグの組み合わせがここに表示されます。Instagram に貼り付けて使ってください。
+      </p>
 
-        <div class="preview-options">
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="delimiter"
-              value="space"
-              checked
-            />
-            スペースで区切る
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="delimiter" value="newline" />
-            改行で区切る
-          </label>
-        </div>
+      <div class="preview-options">
+        <label class="radio-label">
+          <input type="radio" name="delimiter" value="space" checked />
+          スペースで区切る
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="delimiter" value="newline" />
+          改行で区切る
+        </label>
+      </div>
 
-        <div class="preview-box">
-          <textarea
-            id="previewArea"
-            class="preview-textarea"
-            rows="10"
-            readonly
-          ></textarea>
-        </div>
+      <div class="preview-box">
+        <textarea id="previewArea" 
+        class="preview-textarea" 
+        rows="10"></textarea>
+      </div>
 
-        <div class="preview-actions">
-          <button id="copyBtn" class="button button-primary">
-            コピー
-          </button>
-          <button id="clearBtn" class="button button-secondary">
-            クリア
-          </button>
-        </div>
+      <div class="preview-actions">
+        <button id="copyBtn" class="button button-primary">
+          コピー
+        </button>
+        <button id="clearBtn" class="button button-secondary">
+          クリア
+        </button>
+      </div>
 
-        <p class="helper-text">
-          ※同じタグは重複しないように自動で整理されます。
-        </p>
-      </section>
-    </main>
+      <p class="helper-text">
+        ※同じタグは重複しないように自動で整理されます。
+      </p>
+    </section>
+  </main>
 
-    <footer class="app-footer">
-      <p>© Jamdesign / Buddy &amp; Brother.</p>
-    </footer>
+  <footer class="app-footer">
+    <p>© Jamdesign / Buddy &amp; Brother.</p>
+  </footer>
 
-    <script src="script.js"></script>
-  </body>
+  <script src="script.js"></script>
+</body>
+
 </html>

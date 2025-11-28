@@ -7,25 +7,95 @@ const defaultCategories = [
   {
     id: "basic",
     name: "基本",
-    tags: ["＃ジャムデザイン", "＃デザイン会社", "＃グラフィックデザイン"],
+    tags: [
+      "#ジャムデザイン",
+      "#デザイン会社",
+      "#デザイナー",
+      "#制作会社",
+      "#岩槻",
+      "#さいたま市",
+      "#さいたま",
+      "#埼玉",
+      "#ワンストップ",
+    ],
   },
   {
     id: "photo",
     name: "撮影",
-    tags: ["＃撮影", "＃スチール撮影", "＃撮影依頼", "＃出張撮影"],
+    tags: [
+      "#撮影",
+      "#スチール撮影",
+      "#スタジオ撮影",
+      "#商品撮影",
+      "#ビジネスフォト",
+      "#出張撮影",
+      "#スチール",
+      "#写真撮影",
+      "#カメラマン",
+    ],
+  },
+  {
+    id: "graphic",
+    name: "グラフィックデザイン",
+    tags: [
+      "#グラフィックデザイン",
+      "#イラスト制作",
+      "#ポスター制作",
+      "#キャラクター制作",
+      "#ロゴ制作",
+      "#印刷",
+      "#冊子制作",
+    ],
   },
   {
     id: "movie",
     name: "動画",
-    tags: ["＃動画制作", "＃動画編集", "＃PR動画", "＃採用動画"],
+    tags: [
+      "#動画制作",
+      "#動画撮影",
+      "#動画編集",
+      "#ポストプロダクション",
+      "#PR動画",
+      "#採用動画",
+      "#映像制作",
+      "#webcm",
+    ],
+  },
+  {
+    id: "web",
+    name: "WEB",
+    tags: [
+      "#WEB制作",
+      "#WEBデザイン",
+      "#WEBデザイナー",
+      "#LP制作",
+      "#WEBコンテンツ制作",
+    ],
+  },
+  {
+    id: "drone",
+    name: "ドローン",
+    tags: [
+      "#空撮",
+      "#ドローン",
+      "#FPV",
+      "#DJI",
+      "#Mavic",
+      "#ドローン撮影",
+      "#室内ドローン",
+    ],
   },
 ];
 
 let categories = [];
-let selectedTags = [];
 let currentDelimiter = "space";
+let initialPreviewText = "";
 
 // ===== Utility =====
+
+function getPreviewTextarea() {
+  return document.getElementById("previewArea");
+}
 
 function loadData() {
   try {
@@ -44,7 +114,7 @@ function loadData() {
     const previewRaw = window.localStorage.getItem(STORAGE_PREVIEW_KEY);
     if (previewRaw) {
       const parsed = JSON.parse(previewRaw);
-      selectedTags = parsed.selectedTags || [];
+      initialPreviewText = parsed.text || "";
       currentDelimiter = parsed.delimiter || "space";
     }
   } catch (e) {
@@ -57,39 +127,67 @@ function saveData() {
 }
 
 function savePreview() {
+  const textarea = getPreviewTextarea();
+  if (!textarea) return;
   window.localStorage.setItem(
     STORAGE_PREVIEW_KEY,
     JSON.stringify({
-      selectedTags,
+      text: textarea.value,
       delimiter: currentDelimiter,
     })
   );
 }
 
-function refreshPreview() {
-  const textarea = document.getElementById("previewArea");
+// 現在のプレビュー欄からタグ配列を取得（空白・改行区切り）
+function getCurrentTagsFromPreview() {
+  const textarea = getPreviewTextarea();
+  if (!textarea) return [];
+  const raw = textarea.value.trim();
+  if (!raw) return [];
+  const parts = raw.split(/\s+/).filter(Boolean);
+  const seen = new Set();
+  const result = [];
+  for (const p of parts) {
+    if (!seen.has(p)) {
+      seen.add(p);
+      result.push(p);
+    }
+  }
+  return result;
+}
+
+// タグ配列を現在の区切り設定でプレビュー欄に反映
+function setPreviewTags(tags) {
+  const textarea = getPreviewTextarea();
+  if (!textarea) return;
   const delimiter = currentDelimiter === "newline" ? "\n" : " ";
-  textarea.value = selectedTags.join(delimiter);
+  textarea.value = tags.join(delimiter);
   savePreview();
 }
 
-function addTag(tag) {
-  if (!selectedTags.includes(tag)) {
-    selectedTags.push(tag);
-    refreshPreview();
+// タグ1つ追加（重複はスキップ）
+function addTagToPreview(tag) {
+  const tags = getCurrentTagsFromPreview();
+  if (!tags.includes(tag)) {
+    tags.push(tag);
+    setPreviewTags(tags);
   }
 }
 
-function addTags(tags) {
+// タグ配列まとめて追加（重複除去）
+function addTagsToPreview(tagsToAdd) {
+  const tags = getCurrentTagsFromPreview();
+  const seen = new Set(tags);
   let updated = false;
-  tags.forEach((tag) => {
-    if (!selectedTags.includes(tag)) {
-      selectedTags.push(tag);
+  for (const t of tagsToAdd) {
+    if (!seen.has(t)) {
+      seen.add(t);
+      tags.push(t);
       updated = true;
     }
-  });
+  }
   if (updated) {
-    refreshPreview();
+    setPreviewTags(tags);
   }
 }
 
@@ -309,7 +407,11 @@ function deleteCategory(categoryId) {
 // ===== Clipboard =====
 
 async function copyToClipboard() {
-  const textarea = document.getElementById("previewArea");
+  const textarea = getPreviewTextarea();
+  if (!textarea) {
+    window.alert("コピーするタグがありません。");
+    return;
+  }
   const text = textarea.value;
   if (!text.trim()) {
     window.alert("コピーするタグがありません。");
@@ -338,6 +440,7 @@ function bindEvents() {
   const copyBtn = document.getElementById("copyBtn");
   const clearBtn = document.getElementById("clearBtn");
   const delimiterRadios = document.querySelectorAll('input[name="delimiter"]');
+  const textarea = getPreviewTextarea();
 
   addCategoryBtn.addEventListener("click", () => {
     createCategory();
@@ -348,14 +451,17 @@ function bindEvents() {
   });
 
   clearBtn.addEventListener("click", () => {
-    selectedTags = [];
-    refreshPreview();
+    if (textarea) {
+      textarea.value = "";
+      savePreview();
+    }
   });
 
   delimiterRadios.forEach((radio) => {
     radio.addEventListener("change", (e) => {
       currentDelimiter = e.target.value;
-      refreshPreview();
+      const tags = getCurrentTagsFromPreview();
+      setPreviewTags(tags);
     });
   });
 
@@ -367,7 +473,14 @@ function bindEvents() {
     selectedRadio.checked = true;
   }
 
-  // イベントデリゲーションでカテゴリ周りを処理
+  // プレビュー手動編集 → そのまま保存
+  if (textarea) {
+    textarea.addEventListener("input", () => {
+      savePreview();
+    });
+  }
+
+  // カテゴリまわりのクリック（デリゲーション）
   categoryList.addEventListener("click", (event) => {
     const target = event.target;
     const action = target.dataset.action;
@@ -378,12 +491,12 @@ function bindEvents() {
     switch (action) {
       case "addAll": {
         const cat = categories.find((c) => c.id === categoryId);
-        if (cat) addTags(cat.tags);
+        if (cat) addTagsToPreview(cat.tags);
         break;
       }
       case "addTag": {
         const tag = target.dataset.tag;
-        if (tag) addTag(tag);
+        if (tag) addTagToPreview(tag);
         break;
       }
       case "edit": {
@@ -414,5 +527,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadData();
   renderCategories();
   bindEvents();
-  refreshPreview();
+
+  // 保存していたプレビュー内容を反映
+  const textarea = getPreviewTextarea();
+  if (textarea) {
+    textarea.value = initialPreviewText;
+  }
 });
